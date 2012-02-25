@@ -20,13 +20,9 @@ var Game = new function(){
     };
     $(document).bind('keyup', keyupHandler);
     
-    this.startLevel();
-  };
-  
-  this.startLevel = function(){
     this.playerPosn = {x: 0, y: 0};
     this.moveCount = 0;
-    Level.load();
+    Level.loadLevel();
     this.draw();
   };
   
@@ -95,14 +91,16 @@ var Game = new function(){
   this.checkVictory = function(){
     if (Level.isComplete()){
       alert("Level complete! It only took " + this.moveCount + " moves!");
-      var newLevelLoaded = Level.loadNextLevel();
+      var newLevelLoaded = Level.loadNext();
       
       if ( newLevelLoaded ){
         this.moveCount = 0;
         this.draw();
         }
-      else
+      else{
         alert("You've beaten all the levels! :O:O");
+        this.clearCanvas();
+      }
     }
   };
   
@@ -111,4 +109,9 @@ var Game = new function(){
     alert("You stepped on a red tile! D:\nTry again!");
     this.startLevel();
   }
+  
+  this.clearCanvas = function(){
+    this.canvas.width = this.canvas.width;
+    $(document).unbind('keyup');
+  };
 };

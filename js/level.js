@@ -1,7 +1,9 @@
 var Level = new function(){
   this.tiles;
-  this.levelsArray;
+  this.levelsXML;
+  this.levelsArray;// to be deprecated
   this.currentLevelIdx;
+  this.numLevels;
   this.ColourEnum = {
     RED: 0,
     BLUE: 1,
@@ -22,15 +24,34 @@ var Level = new function(){
   
   this.initialize = function(){
     this.currentLevelIdx = 0;
+
+    $.ajax({
+      url: "./xml/levels.xml",
+      dataType: "xml",
+      async: false,
+      context: this,
+      success: 
+        function(data){
+          this.levelsXML = $(data).find("levels");
+          this.numLevels = $(this.levelsXML).find("level").length;
+        }
+      });
+      
     
-    // (hopefully this will be loaded externally later)
     
-    // level is made up of
-    // R - red tile
-    // B - blue tile
-    // \s - space (nothing)
+    // below will be deprecated soon, i hope
     this.levelsArray = 
-    [ [[' ','#','B','B','B','#','#','B','B','B'],
+    [ [[' ','#',' ',' ',' ',' ',' ',' ',' ',' '],
+       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
+       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
+       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
+       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
+       ['B','#','#','#','#','#','#',' ',' ',' '],
+       ['B','B','B','B',' ','B','#',' ',' ',' '],
+       ['#','#','#','#','#','#','#',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']],
+      [[' ','#','B','B','B','#','#','B','B','B'],
        ['B','#','B','#','B','B','#','B','#','B'],
        ['B','#','B','B','#','B','#','B','#','B'],
        ['B','#','B','B','#','B','#','B','B','B'],
@@ -39,32 +60,26 @@ var Level = new function(){
        ['#','B','B','B','#','B','B','B','B','B'],
        ['#','B','#','B','#','B','B','#','#','#'],
        ['#','B','#','B','#','#','#','#','#','#'],
-       ['#','B','B','B','#','#','#','#','#','#']],
-      [[' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']]
+       ['#','B','B','B','#','#','#','#','#','#']]
     ];
   };
-  
-  this.loadNextLevel = function(){
+
+  this.loadNext = function(){
     this.currentLevelIdx++;
-    return this.load();
+    return this.loadLevel();
   }
   
-  this.load = function(){
-    if (this.currentLevelIdx >= this.levelsArray.length)
+  this.reload = function(){
+    return this.loadLevel();
+  };
+  
+  this.loadLevel = function(){
+    if (this.currentLevelIdx >= this.numLevels)
       return false;
     
-    // deep copy the array so original is intact
-    this.tiles = $.extend(true, [], this.levelsArray[this.currentLevelIdx] );
     
+    // deep copy the array so original is intact (DEPRECATED SOON)
+    this.tiles = $.extend(true, [], this.levelsArray[this.currentLevelIdx] );
     
     // "pivot" the above table so that the canvas resembles the layout above
     for (var i = 0; i < this.tiles.length; i++)

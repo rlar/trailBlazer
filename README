@@ -3,4 +3,32 @@ trailBlazer
 a JS/Canvas game based around solving 2D path-based puzzles.
 inspired by a minigame from an old Zelda game for GameBoy.
 
--rob
+current features:
+10x10 maps of red, blue, wall, empty tiles
+WASD/direction arrow movement
+XML level descriptions
+
+future ideas:
+- gameplay:
+  - compare users score to minimum score in end-of-level notice
+  - record of level, attempts, best score
+  - yellow tiles which flip to blue before red for cooler puzzles
+  - bombs or something that will flip surrounding tiles in a + or something
+  - PORTAL TILES
+  - _PLACEABLE PORTAL TILES_
+  - restart game when beaten?
+  
+- interface:
+  - retry/next level menus
+  - replace the shitty alert()'s with an on canvas menu or something
+  - put the <p> blurb below the canvas into an on-canvas menu? or something?
+  - resizeable canvas for irregularly shapes maps?
+  
+
+- mapstuffs:
+  - resizeable canvas for irregularly shapes maps?
+  - some kind of validation for map XML's
+  - RESTful service to GET maps, eventually POST too (for: )
+  - a way to create maps either in game, or import from .csv, etc (gdocs api?)
+
+
