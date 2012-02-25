@@ -107,7 +107,7 @@ var Game = new function(){
   this.retryLevel = function(){
     this.draw(); // show the user where they stepped
     alert("You stepped on a red tile! D:\nTry again!");
-    this.startLevel();
+    Level.reload();
   }
   
   this.clearCanvas = function(){

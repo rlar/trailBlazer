@@ -4,23 +4,24 @@ var Level = new function(){
   this.levelsArray;// to be deprecated
   this.currentLevelIdx;
   this.numLevels;
+  this.minMoves;
   this.ColourEnum = {
     RED: 0,
     BLUE: 1,
     WHITE: 2,
     GREY: 3
   };
+  this.fillStyleMap = [
+    "rgb(200,0,0)",
+    "rgb(0,0,200)",
+    "rgb(255,255,255)",
+    "rgb(210,210,210)"
+  ];
   this.moveResultEnum = {
     VALID: 0,
     INVALID: 1,
     GAMEOVER: 2
   };
-  this.fillStyleMap = [
-    "rgb(200,0,0)",
-    "rgb(0,0,200)",
-    "rgb(255,255,255)",
-    "rgb(240,240,240)"
-  ];
   
   this.initialize = function(){
     this.currentLevelIdx = 0;
@@ -32,36 +33,10 @@ var Level = new function(){
       context: this,
       success: 
         function(data){
-          this.levelsXML = $(data).find("levels");
+          this.levelsXML = $(data).find("levels")[0];
           this.numLevels = $(this.levelsXML).find("level").length;
         }
       });
-      
-    
-    
-    // below will be deprecated soon, i hope
-    this.levelsArray = 
-    [ [[' ','#',' ',' ',' ',' ',' ',' ',' ',' '],
-       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
-       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
-       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
-       ['B','#',' ',' ',' ',' ',' ',' ',' ',' '],
-       ['B','#','#','#','#','#','#',' ',' ',' '],
-       ['B','B','B','B',' ','B','#',' ',' ',' '],
-       ['#','#','#','#','#','#','#',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
-       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']],
-      [[' ','#','B','B','B','#','#','B','B','B'],
-       ['B','#','B','#','B','B','#','B','#','B'],
-       ['B','#','B','B','#','B','#','B','#','B'],
-       ['B','#','B','B','#','B','#','B','B','B'],
-       ['B','#','B','B','#','B','#','#','B','B'],
-       ['B','B','B','B','#','B','B','B','#','B'],
-       ['#','B','B','B','#','B','B','B','B','B'],
-       ['#','B','#','B','#','B','B','#','#','#'],
-       ['#','B','#','B','#','#','#','#','#','#'],
-       ['#','B','B','B','#','#','#','#','#','#']]
-    ];
   };
 
   this.loadNext = function(){
@@ -76,26 +51,43 @@ var Level = new function(){
   this.loadLevel = function(){
     if (this.currentLevelIdx >= this.numLevels)
       return false;
-    
-    
+
     // deep copy the array so original is intact (DEPRECATED SOON)
-    this.tiles = $.extend(true, [], this.levelsArray[this.currentLevelIdx] );
-    
-    // "pivot" the above table so that the canvas resembles the layout above
+    this.tiles = [];
+
+    // parse this level from xml to 2dim array
+    var level = $(this.levelsXML).children("level")[this.currentLevelIdx];
+    var self = this;
+    $(level)
+      .children("rows")
+      .children("row")
+      .each(function (){
+        var rowChars= this.textContent.split("");
+        var row = [];
+        
+        for (var i = 0; i < rowChars.length; i+=2)
+          row.push(rowChars[i]);
+          
+        self.tiles.push(row);
+      });
+      
+    // "pivot" the rows and columns to match XML appearance
     for (var i = 0; i < this.tiles.length; i++)
       for (var j = i; j < this.tiles[i].length; j++){
         var temp = this.tiles[i][j];
         this.tiles[i][j] = this.tiles[j][i];
         this.tiles[j][i] = temp;
       }
-                   
+
     // turn the chars into tile objects  
     for (var i = 0; i < this.tiles.length; i++)
       for (var j = 0; j < this.tiles[i].length; j++)
         this.tiles[i][j] = this.makeTile( i, j, this.tiles[i][j] );
-        
-    Game.playerPosn.x = 0;
-    Game.playerPosn.y = 0;
+
+    
+    this.minMoves = $(level).attr("minMoves");
+    Game.playerPosn.x = $(level).attr("startX");
+    Game.playerPosn.y = $(level).attr("startY");
     this.tiles[Game.playerPosn.x][Game.playerPosn.y].hasPlayer = true;
     
     return true;
