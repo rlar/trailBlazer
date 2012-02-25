@@ -1,0 +1,171 @@
+var Level = new function(){
+  this.tiles;
+  this.levelsArray;
+  this.currentLevelIdx;
+  this.ColourEnum = {
+    RED: 0,
+    BLUE: 1,
+    WHITE: 2,
+    GREY: 3
+  };
+  this.moveResultEnum = {
+    VALID: 0,
+    INVALID: 1,
+    GAMEOVER: 2
+  };
+  this.fillStyleMap = [
+    "rgb(200,0,0)",
+    "rgb(0,0,200)",
+    "rgb(255,255,255)",
+    "rgb(240,240,240)"
+  ];
+  
+  this.initialize = function(){
+    this.currentLevelIdx = 0;
+    
+    // (hopefully this will be loaded externally later)
+    
+    // level is made up of
+    // R - red tile
+    // B - blue tile
+    // \s - space (nothing)
+    this.levelsArray = 
+    [ [[' ','#','B','B','B','#','#','B','B','B'],
+       ['B','#','B','#','B','B','#','B','#','B'],
+       ['B','#','B','B','#','B','#','B','#','B'],
+       ['B','#','B','B','#','B','#','B','B','B'],
+       ['B','#','B','B','#','B','#','#','B','B'],
+       ['B','B','B','B','#','B','B','B','#','B'],
+       ['#','B','B','B','#','B','B','B','B','B'],
+       ['#','B','#','B','#','B','B','#','#','#'],
+       ['#','B','#','B','#','#','#','#','#','#'],
+       ['#','B','B','B','#','#','#','#','#','#']],
+      [[' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' '],
+       [' ',' ',' ',' ',' ',' ',' ',' ',' ',' ']]
+    ];
+  };
+  
+  this.loadNextLevel = function(){
+    this.currentLevelIdx++;
+    return this.load();
+  }
+  
+  this.load = function(){
+    if (this.currentLevelIdx >= this.levelsArray.length)
+      return false;
+    
+    // deep copy the array so original is intact
+    this.tiles = $.extend(true, [], this.levelsArray[this.currentLevelIdx] );
+    
+    
+    // "pivot" the above table so that the canvas resembles the layout above
+    for (var i = 0; i < this.tiles.length; i++)
+      for (var j = i; j < this.tiles[i].length; j++){
+        var temp = this.tiles[i][j];
+        this.tiles[i][j] = this.tiles[j][i];
+        this.tiles[j][i] = temp;
+      }
+                   
+    // turn the chars into tile objects  
+    for (var i = 0; i < this.tiles.length; i++)
+      for (var j = 0; j < this.tiles[i].length; j++)
+        this.tiles[i][j] = this.makeTile( i, j, this.tiles[i][j] );
+        
+    Game.playerPosn.x = 0;
+    Game.playerPosn.y = 0;
+    this.tiles[Game.playerPosn.x][Game.playerPosn.y].hasPlayer = true;
+    
+    return true;
+  };
+  
+  this.makeTile = function(i,j, inChar){
+    var self = this;
+    var tile = new Object();
+    tile.i = i;
+    tile.j = j;
+    tile.hasPlayer = false;
+    
+    switch (inChar){
+      case 'R':
+        tile.colour = self.ColourEnum.RED;
+        tile.canMoveHere = true;
+        break;
+      case 'B':
+        tile.colour = self.ColourEnum.BLUE;
+        tile.canMoveHere = true;
+        break;
+      case ' ':
+        tile.colour = self.ColourEnum.WHITE;
+        tile.canMoveHere = true;
+        break;
+      case '#':
+        tile.colour = self.ColourEnum.GREY;
+        tile.canMoveHere = false;
+        break;
+    }
+    
+    tile.buffer = function(canvasBufferContext){ 
+      var ctx = canvasBufferContext;
+      ctx.fillStyle = self.fillStyleMap[tile.colour];
+      ctx.fillRect(tile.i*50+2, tile.j*50+2, 46, 46);
+      
+      if (tile.hasPlayer){
+        ctx.beginPath();
+        ctx.arc(tile.i*50+25, tile.j*50+25, 20, 0, Math.PI*2, false); 
+        ctx.fillStyle = "rgb(0,255,255)";
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+      }
+    };
+    
+    tile.movePlayerHere = function(oldTile){
+      var oldPosn = Game.playerPosn;
+      var oldTile = self.tiles[oldPosn.x][oldPosn.y];
+      
+      if (!tile.canMoveHere)
+        return self.moveResultEnum.INVALID;
+      
+      oldTile.hasPlayer = false;
+      tile.hasPlayer = true;
+      
+      switch(tile.colour){
+        case self.ColourEnum.BLUE:
+          tile.colour = self.ColourEnum.RED;
+          break;
+        case self.ColourEnum.RED:
+          return self.moveResultEnum.GAMEOVER;
+          break;
+      }
+      
+      return self.moveResultEnum.VALID;
+
+    };
+    
+    return tile;
+  };
+  
+  this.buffer = function(canvasBufferContext){
+    for (var i = 0; i < this.tiles.length; i++)
+      for (var j = 0; j < this.tiles[i].length; j++)
+        this.tiles[i][j].buffer(canvasBufferContext);
+  }
+  
+  this.isComplete = function(){
+    for (var i = 0; i < this.tiles.length; i++)
+      for (var j = 0; j < this.tiles[i].length; j++)
+        if (this.tiles[i][j].colour == this.ColourEnum.BLUE)
+          return false;
+          
+    return true;
+  };
+};
